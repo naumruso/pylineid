@@ -2,6 +2,8 @@ import numpy as np
 
 import matplotlib.lines as mlines
 
+__version__ = '0.1'
+
 def _convert_to_array(x, size, name):
     """
     Check length of array or convert scalar to array.
