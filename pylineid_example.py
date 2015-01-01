@@ -1,14 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from pylineid import put_lines
+import pylineid
+
+
+get_line_flux = lambda newx, x, y: np.interp(newx, x, y)
 
 wave = 1240 + np.arange(300) * 0.1
 flux = np.random.normal(size=300)
 
 cwaves = [1242.80, 1260.42, 1264.74, 1265.00, 1265.2, 1265.3, 1265.35]
 fluxes = get_line_flux(cwaves, wave, flux)
-bars = np.random.rand(fluxes.size)
+bars = np.random.rand(fluxes.size) #This shows the relative strength of each line
 labels = ['N V', 'Si II', 'Si II', 'Si II', 'Si II', 'Si II', 'Si II']
 labels = [str("%s %9.3f" %(label,cwave)) for cwave, label in zip(cwaves, labels)]
 
@@ -24,6 +27,6 @@ fig.tight_layout()
 
 ypos2 = 3.3
 ypos3 = 4.4
-res = put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels, bars=bars)
+lines_plot = pylineid.put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels, bars=bars)
 
 fig.savefig('pylineid_example.pdf')

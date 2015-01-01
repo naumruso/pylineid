@@ -31,16 +31,6 @@ def _convert_to_array(x, size, name):
 
     return xa
 
-def get_line_flux(line_wave, wave, flux, **kwargs):
-	"""
-    Interpolated flux at a given wavelength (calls np.intrep).
-
-    Notes (N. Rusomarov)
-    --------------------
-    Taken verbatim from https://github.com/phn/lineid_plot
-    """
-	return np.interp(line_wave, wave, flux, **kwargs)
-
 def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
                  max_iter=1000, adjust_factor=0.35,
                  factor_decrement=3.0, fd_p=0.75):
@@ -250,7 +240,7 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
 	# Find final x locations of boxes so that they don't overlap.
 	# Function adjust_boxes uses a direct translation of the equivalent
 	# code in lineid_plot.pro in IDLASTRO.
-	edges = (np.min(wave)+text_widths[0], np.max(wave)-text_widths[-1])
+	edges = (ax.get_xlim()[0]+text_widths[0], ax.get_xlim()[1]-text_widths[-1])
 	xpos3, niter, changed = adjust_boxes(cwaves, text_widths, *edges, **adjustkwargs)
 
 	# Redraw the boxes at their new x location.
