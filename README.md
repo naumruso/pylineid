@@ -31,6 +31,23 @@ To download the entire repository either clone the repository or use
 the *Download* button. To download just the `pylineid.py` file,
 click on the file and then download the *raw* version.
 
+Example
+=======
+
+A basic plot can be created by calling the function `put_lines()` and
+passing the required parameters. It is important the the user first
+plots the spectrum and lets matplotlib draw the figure.
+
+Notes
+=====
+
+In OS X it is required that the user calls `Figure.show()` after plotting
+the spectrum and before calling the function `put_lines()`. `Figure.show()`
+creates the necessary renderers that define the size of different elements
+of the plot. In Linux, usually `Figure.canvas.draw()` is enough.
+
+In the opposite case one will get a matplotlib `RuntimeError: Cannot get window extent w/o renderer`
+
 License
 =======
 
