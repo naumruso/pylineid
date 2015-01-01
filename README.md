@@ -38,6 +38,8 @@ A basic plot can be created by calling the function `put_lines()` and
 passing the required parameters. It is important the the user first
 plots the spectrum and lets matplotlib draw the figure.
 
+![Example plot](https://github.com/naumruso/pylineid/blob/master/pylineid_example.png)
+
 Notes
 =====
 
