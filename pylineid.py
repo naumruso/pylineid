@@ -4,6 +4,7 @@ import matplotlib.lines as mlines
 
 __version__ = '0.1'
 
+
 def _convert_to_array(x, size, name):
     """
     Check length of array or convert scalar to array.
@@ -30,6 +31,7 @@ def _convert_to_array(x, size, name):
         xa = np.array(x)
 
     return xa
+
 
 def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
                  max_iter=1000, adjust_factor=0.35,
@@ -81,14 +83,14 @@ def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
 
     Notes (N. Rusomarov)
     --------------------
-    Taken verbatim from https://github.com/phn/lineid_plot
+    Taken from https://github.com/phn/lineid_plot
     """
     # Adjust positions.
     niter = 0
     changed = True
-    nlines = len(line_wave)
 
-    wlp = line_wave[:]
+    wlp = np.copy(line_wave)
+    nlines = wlp.size
     while changed:
         changed = False
         for i in range(nlines):
@@ -125,144 +127,162 @@ def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
 
 
 def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
-			  bars=None, barskwargs=dict(color='red', lw=1.25),
-			  adjustkwargs=dict(max_iter=1000, adjust_factor=0.35, factor_decrement=3.0, fd_p=0.75),
-			  linekwargs=dict(color='black', lw=0.75), 
-			  textkwargs=dict(size=9, ha='right', va='bottom', rotation=90)):
-	"""
-	Automatic layout of labels for spectral lines in a plot.
+              bars=None, barskwargs=dict(),
+              adjustkwargs=dict(), linekwargs=dict(), textkwargs=dict()):
+    	"""
+        Automatic layout of labels for spectral lines in a plot.
+    
+        Parameters
+        ----------
+        ax : Matplotlib Axes
+            The Axes in which the labels are to be placed.
+        cwaves: list or array of floats
+            Wavelength of the lines to be plotted.
+        fluxes: list or array of floats
+            Flux at each wavelength in cwaves.
+        ypos2: float, list or array of floats
+            Maximum value of the data on the y-axis.
+        ypos3: float, list or array of floats
+            Position of the text labels on the y-axis.
+        labels: list of strings
+            Label text for each line.
+        bars: list or array of floats (optional)
+            Relative strength (between 0 and 1) of each line.
+        barskwargs: key value pairs (optional)
+            These keywords control the style of the vertical
+            bars that show the relative line strength (passed
+            to ax.vlines)
+        linekwargs: key value pairs (optional)
+            These keywords control the style of the line that
+            connects the spectrum and the text label (line 1
+            and line 2 in the sketch below.). This is passed
+            to matplotlib.lines.Line2D.
+        textkwargs: key value pairs (optional)
+            These keywords control the style of the text
+            labels (passed to ax.text)
+    
+        Returns
+        -------
+        A dictinary with fields: lines, texts, and vbars.
+            lines: list of matplotlib.lines.Line2D instances.
+                These are the lines that connect the spectrum
+                and the text labels.
+            texts: matplotlib Axes text instances of the text
+                labels that were printed on the plot.
+            vbars: collection of vertical lines (returned by
+                ax.vlines), or None.
+    
+        Notes
+        -----
+        Elements of the plot for a single line:
+    
+        |(xpos3)
+        |---x-------------- (ypos3 + bars)
+        |   |
+        |   | vbar
+        |   |
+        |---x-------------- (ypos3)
+        |    \
+        |     \
+        |      \ line 2
+        |       \
+        |        \
+        |---------x-------- (ypos2)
+        |         |
+        |         | line 1
+        |         |
+        |---------x-------- (flux)
+        |      (cwave)
+    
+        cwaves and fluxes indicate the starting position of
+        the line (matplotlib.lines.Line2D object)
+    
+        ypos2 and ypos3 indicate the y-axis position, where
+        line 1 should connect with line 2.
+    
+        ypos3 is the level on the y-axis where we want to
+        put the text labels. It can be one number, which is
+        the same for all labels, or one for each label.
+    
+        xpos3 is the position of each text label on the x-axis
+        (in data coordinates). This is  calculated automatically
+        by the function adjust_boxes.
+    
+        labels contains the text for each line.
+    
+        bars can be additional list or array of floats with
+        the same size as cwaves that gives the relative strength
+        (between 0 and 1) of each line.
+        """
+        # prepare data
+        fig = ax.get_figure()
+        ypos2 = _convert_to_array(ypos2, len(cwaves), 'ypos2')
+        ypos3 = _convert_to_array(ypos3, len(cwaves), 'ypos3')
 
-    Parameters
-    ----------
-    ax : Matplotlib Axes
-    	The Axes in which the labels are to be placed.
-    cwaves: list or array of floats
-        Wavelength of the lines to be plotted.
-    fluxes: list or array of floats
-        Flux at each wavelength in cwaves.
-    ypos2: float, list or array of floats
-        Maximum value of the data on the y-axis.
-    ypos3: float, list or array of floats
-    	Position of the text labels on the y-axis.
-    labels: list of strings
-        Label text for each line.
-    bars: list or array of floats (optional)
-    	Relative strength (between 0 and 1) of each line.
-    barskwargs: key value pairs (optional)
-    	These keywords control the style of the vertical
-    	bars that show the relative line strength (passed
-    	to ax.vlines)
-    linekwargs: key value pairs (optional)
-    	These keywords control the style of the line that
-    	connects the spectrum and the text label (line 1
-    	and line 2 in the sketch below.). This is passed
-		to matplotlib.lines.Line2D.
-	textkwargs: key value pairs (optional)
-		These keywords control the style of the text
-		labels (passed to ax.text)
+        # update kwargs
+        textkwargs_defaults = dict(size=9, ha='right', va='bottom',
+                                   rotation=90)
+        textkwargs_defaults.update(textkwargs)
+        
+        linekwargs_defaults = dict(color='black', lw=0.75)
+        linekwargs_defaults.update(linekwargs)
+        
+        adjustkwargs_defaults = dict(max_iter=1000, adjust_factor=0.35,
+                                     factor_decrement=3.0, fd_p=0.75)
+        adjustkwargs_defaults.update(adjustkwargs)
+        
+        barskwargs_defaults = dict(color='red', lw=1.25)
+        barskwargs_defaults.update(barskwargs)
+        
+        # First plot the text labels at cwaves as first approximation
+        texts = []
+        textkwargs_defaults['size'] += 1
+        for cwave, yp3, label in zip(cwaves, ypos3, labels):
+            texts.append(ax.text(cwave, yp3, label, **textkwargs_defaults))
+        
+        # Update the figure with the texts.
+        fig.canvas.draw()
+        
+        # Get annotation boxes and convert their dimensions from display
+        # coordinates to data coordinates. Specifically, we want the width
+        # in wavelength units. For each annotation box, transform the
+        # bounding box into data coordinates and extract the width.
+        ax_inv_trans = ax.transData.inverted()  # display to data
+        text_widths = []  # text box width in wavelength units.
+        text_heights = []  # text box height in units of y-axis
+        # This doesn't work if the figure hasn't been drawn before.
+        for text in texts:
+            b_ext = text.get_window_extent()
+            text_widths.append(b_ext.transformed(ax_inv_trans).width)
+            text_heights.append(b_ext.transformed(ax_inv_trans).height)
+        
+        # Find final x locations of boxes so that they don't overlap.
+        # Function adjust_boxes uses a direct translation of the equivalent
+        # code in lineid_plot.pro in IDLASTRO.
+        xlims = ax.get_xlim()
+        edges = (xlims[0]+text_widths[0], xlims[1]-text_widths[-1])
+        xpos3, niter, changed = adjust_boxes(np.copy(cwaves), text_widths,
+                                             *edges, **adjustkwargs_defaults)
+        
+        # Redraw the boxes at their new x location.
+        for text, xp3 in zip(texts, xpos3):
+            text.set_x(xp3)
+            text.set_size(textkwargs_defaults['size']-1)
 
-	Returns
-	-------
-	A dictinary with fields: lines, texts, and vbars. 
-		lines: list of matplotlib.lines.Line2D instances.
-			These are the lines that connect the spectrum
-			and the text labels.
-		texts: matplotlib Axes text instances of the text
-			labels that were printed on the plot.
-		vbars: collection of vertical lines (returned by
-			ax.vlines), or None.
+        # Now connect the spectrum with the labels
+        lines = []
+        for cwave, flux, yp2, yp3, xp3 in zip(cwaves, fluxes, ypos2, ypos3, xpos3):
+            line = mlines.Line2D([cwave, cwave, xp3], [flux, yp2, yp3], **linekwargs_defaults)
+            lines.append(ax.add_line(line))
+        
+        # Add vertical bars indicating the line strength (optional part)
+        if bars is not None:
+            bars *= np.max(text_heights)  # rescale all bars to the max height
+            vbars = ax.vlines(xpos3, ypos3, ypos3 + bars, **barskwargs_defaults)
+        else:
+            vbars = None
+        
+        # Update the figure
+        fig.canvas.draw()
 
-	Notes
-	-----
-	Elements of the plot for a single line:
-
-	|(xpos3)
-	|---x-------------- (ypos3 + bars)
-	|   |
-	|   | vbar
-	|   |
-	|---x-------------- (ypos3)
-	|    \
-	|     \
-	|      \ line 2
-	|       \
-	|        \
-	|---------x-------- (ypos2)
-	|         |
-	|         | line 1
-	|         |
-	|---------x-------- (flux)
-	|      (cwave)
-
-	cwaves and fluxes indicate the starting position of
-	the line (matplotlib.lines.Line2D object)
-
-	ypos2 and ypos3 indicate the y-axis position, where
-	line 1 should connect with line 2.
-
-	ypos3 is the level on the y-axis where we want to
-	put the text labels. It can be one number, which is
-	the same for all labels, or one for each label.
-
-	xpos3 is the position of each text label on the x-axis
-	(in data coordinates). This is  calculated automatically
-	by the function adjust_boxes. 
-
-	labels contains the text for each line.
-
-	bars can be additional list or array of floats with
-	the same size as cwaves that gives the relative strength
-	(between 0 and 1) of each line.
-	"""
-	fig = ax.get_figure()
-	ypos2 = _convert_to_array(ypos2, len(cwaves), 'ypos2')
-	ypos3 = _convert_to_array(ypos3, len(cwaves), 'ypos3')
-
-	# First plot the text labels at cwaves as first approximation
-	texts = [ax.text(cwave, yp3, label, **textkwargs) for cwave, yp3, label in zip(cwaves, ypos3, labels)]
-
-	# Update the figure with the texts.
-	fig.canvas.draw()
-
-	# Get annotation boxes and convert their dimensions from display
-	# coordinates to data coordinates. Specifically, we want the width
-	# in wavelength units. For each annotation box, transform the
-	# bounding box into data coordinates and extract the width.
-	ax_inv_trans = ax.transData.inverted()  # display to data
-	text_widths = []  # text box width in wavelength units.
-	text_heights = [] # text box height in units of y-axis
-	for text in texts:
-		b_ext = text.get_window_extent() #This doesn't work if the figure hasn't been drawn before.
-		text_widths.append(b_ext.transformed(ax_inv_trans).width)
-		text_heights.append(b_ext.transformed(ax_inv_trans).height)
-
-
-	# Find final x locations of boxes so that they don't overlap.
-	# Function adjust_boxes uses a direct translation of the equivalent
-	# code in lineid_plot.pro in IDLASTRO.
-	edges = (ax.get_xlim()[0]+text_widths[0], ax.get_xlim()[1]-text_widths[-1])
-	xpos3, niter, changed = adjust_boxes(cwaves, text_widths, *edges, **adjustkwargs)
-
-	# Redraw the boxes at their new x location.
-	for text, xp3 in zip(texts, xpos3): text.set_x(xp3)
-
-	# Now connect the spectrum with the labels
-	lines = []
-	for cwave, flux, yp2, yp3, xp3 in zip(cwaves, fluxes, ypos2, ypos3, xpos3):
-		line = mlines.Line2D([cwave, cwave, xp3], [flux, yp2, yp3], **linekwargs)
-		lines.append(ax.add_line(line))
-
-	# Add vertical bars indicating the line strength (optional part)
-	if bars is not None:
-		bars *= np.max(text_heights) #rescale all bars to the maximum text height
-		vbars = ax.vlines(xpos3, ypos3, ypos3 + bars, **barskwargs)
-	else:
-		vbars = None
-
-	# Update he figure
-	fig.canvas.draw()
-
-	return dict(lines=lines, texts=texts, vbars=vbars)
-
-
-
+        return dict(lines=lines, texts=texts, vbars=vbars)
