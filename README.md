@@ -34,8 +34,8 @@ Example
 =======
 
 A basic plot can be created by calling the function `put_lines()` and
-passing the required parameters. It is important the the user first
-plots the spectrum, so that matplotlib draw the figure.
+passing the required parameters. It is important that the user first
+plots the spectrum, so that matplotlib can draw the figure.
 
 ![Example plot](https://github.com/naumruso/pylineid/blob/master/pylineid_example.png)
 
@@ -43,11 +43,11 @@ Notes
 =====
 
 In OS X it is necessary for the user to call `Figure.show()` after plotting
-the spectrum and before calling the function `put_lines()`. `Figure.show()`
-creates the necessary renderers that define the size of different elements
-of the plot. In Linux, usually `Figure.canvas.draw()` is enough.
+the spectrum and before calling the function `put_lines()`. In the opposite
+case, one will get a matplotlib `RuntimeError: Cannot get window extent w/o renderer`.
+`Figure.show()` creates the necessary renderers that define the size of different
+elements of the plot. In Linux, usually `Figure.canvas.draw()` is enough.
 
-In the opposite case, one will get a matplotlib `RuntimeError: Cannot get window extent w/o renderer`
 
 License
 =======
