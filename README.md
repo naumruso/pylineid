@@ -3,14 +3,13 @@ Line identification plots using Matplotlib
 
 The python module `pylineid` is used for automatic placement of labels
 of spectral features (lines) without the labels overlapping each other
-in a spectrum.
+in the spectrum.
 
 The use case of this module can be found in spectroscopy, where it is 
-common to task to create plots of a spectrum with lines identified with
-labels.
+typical to create plots of spectra with lines identified by text labels.
 
-An example illustrating the features of `pylineid` is in included
-with the repository.
+An example illustrating the features of `pylineid` is included with
+the repository.
 
 Installation
 ============
@@ -36,19 +35,19 @@ Example
 
 A basic plot can be created by calling the function `put_lines()` and
 passing the required parameters. It is important the the user first
-plots the spectrum and lets matplotlib draw the figure.
+plots the spectrum, so that matplotlib draw the figure.
 
 ![Example plot](https://github.com/naumruso/pylineid/blob/master/pylineid_example.png)
 
 Notes
 =====
 
-In OS X it is required that the user calls `Figure.show()` after plotting
+In OS X it is necessary for the user to call `Figure.show()` after plotting
 the spectrum and before calling the function `put_lines()`. `Figure.show()`
 creates the necessary renderers that define the size of different elements
 of the plot. In Linux, usually `Figure.canvas.draw()` is enough.
 
-In the opposite case one will get a matplotlib `RuntimeError: Cannot get window extent w/o renderer`
+In the opposite case, one will get a matplotlib `RuntimeError: Cannot get window extent w/o renderer`
 
 License
 =======
