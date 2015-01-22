@@ -127,7 +127,7 @@ def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
 
 
 def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
-              bars=None, edges=None, barskwargs=dict(),
+              bars=None, barsheight=None, edges=None, barskwargs=dict(),
               adjustkwargs=dict(), linekwargs=dict(), textkwargs=dict()):
     	"""
         Automatic layout of labels for spectral lines in a plot.
@@ -148,6 +148,10 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
             Label text for each line.
         bars: list or array of floats (optional)
             Relative strength (between 0 and 1) of each line.
+	bscale: float (optional)
+	    The bars are rescaled to this value. If it's not
+	    given, the value of bscale is the max. height of all
+	    text labels. At the end we plot bars * bscale.
         edges: list or array of floats
             Gives the ranges where we can put the lines.
         barskwargs: key value pairs (optional)
@@ -262,7 +266,7 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
         # Function adjust_boxes uses a direct translation of the equivalent
         # code in lineid_plot.pro in IDLASTRO.
         xlims = ax.get_xlim()
-	if edges is None: edges = (xlims[0]+text_widths[0], xlims[1]-text_widths[-1]/2)
+	if edges is None: edges = (xlims[0]+text_widths[0]*1.5, xlims[1]-text_widths[-1]*0.5)
         xpos3, niter, changed = adjust_boxes(np.copy(cwaves), text_widths,
                                              *edges, **adjustkwargs_defaults)
         
@@ -279,8 +283,8 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
         
         # Add vertical bars indicating the line strength (optional part)
         if bars is not None:
-            bars = bars * np.max(text_heights)  # rescale all bars to the max height
-            vbars = ax.vlines(xpos3, ypos3, ypos3 + bars, **barskwargs_defaults)
+	    if bscale is None: bscale = np.max(text_heights)
+            vbars = ax.vlines(xpos3, ypos3, ypos3 + bars*bscale, **barskwargs_defaults)
         else:
             vbars = None
         
