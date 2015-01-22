@@ -100,7 +100,7 @@ def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
             else:
                 diff1 = wlp[i] - left_edge + box_widths[i] * 1.01
                 separation1 = box_widths[i]
-            if i < nlines - 2:
+            if i < nlines - 1:
                 diff2 = wlp[i + 1] - wlp[i]
                 separation2 = (box_widths[i] + box_widths[i + 1]) / 2.0
             else:
@@ -127,7 +127,7 @@ def adjust_boxes(line_wave, box_widths, left_edge, right_edge,
 
 
 def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
-              bars=None, barskwargs=dict(),
+              bars=None, edges=None, barskwargs=dict(),
               adjustkwargs=dict(), linekwargs=dict(), textkwargs=dict()):
     	"""
         Automatic layout of labels for spectral lines in a plot.
@@ -148,6 +148,8 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
             Label text for each line.
         bars: list or array of floats (optional)
             Relative strength (between 0 and 1) of each line.
+        edges: list or array of floats
+            Gives the ranges where we can put the lines.
         barskwargs: key value pairs (optional)
             These keywords control the style of the vertical
             bars that show the relative line strength (passed
@@ -220,14 +222,14 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
         ypos3 = _convert_to_array(ypos3, len(cwaves), 'ypos3')
 
         # update kwargs
-        textkwargs_defaults = dict(size=9, ha='right', va='bottom',
-                                   rotation=90)
+        textkwargs_defaults = dict(size=9, rotation='vertical',
+				   ha='right', va='bottom')
         textkwargs_defaults.update(textkwargs)
         
         linekwargs_defaults = dict(color='black', lw=0.75)
         linekwargs_defaults.update(linekwargs)
         
-        adjustkwargs_defaults = dict(max_iter=1000, adjust_factor=0.35,
+        adjustkwargs_defaults = dict(max_iter=10000, adjust_factor=0.35,
                                      factor_decrement=3.0, fd_p=0.75)
         adjustkwargs_defaults.update(adjustkwargs)
         
@@ -260,7 +262,7 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
         # Function adjust_boxes uses a direct translation of the equivalent
         # code in lineid_plot.pro in IDLASTRO.
         xlims = ax.get_xlim()
-        edges = (xlims[0]+text_widths[0], xlims[1]-text_widths[-1])
+	if edges is None: edges = (xlims[0]+text_widths[0], xlims[1]-text_widths[-1]/2)
         xpos3, niter, changed = adjust_boxes(np.copy(cwaves), text_widths,
                                              *edges, **adjustkwargs_defaults)
         
@@ -277,7 +279,7 @@ def put_lines(ax, cwaves, fluxes, ypos2, ypos3, labels,
         
         # Add vertical bars indicating the line strength (optional part)
         if bars is not None:
-            bars *= np.max(text_heights)  # rescale all bars to the max height
+            bars = bars * np.max(text_heights)  # rescale all bars to the max height
             vbars = ax.vlines(xpos3, ypos3, ypos3 + bars, **barskwargs_defaults)
         else:
             vbars = None
